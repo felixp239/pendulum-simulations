@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 
 public class Board extends JPanel implements ActionListener {
@@ -13,20 +14,37 @@ public class Board extends JPanel implements ActionListener {
     private Timer timer;
     private final int B_WIDTH;
     private final int B_HEIGHT;
-    private final int DELAY = 1;
+    private final int DELAY = 10;
     private final int doublePendulumAmount = 20000;
 
     private Pendulum pendulum;
     private DoublePendulum doublePendulum;
-    private DoublePendulum[] doublePendulums = new DoublePendulum[doublePendulumAmount];
+    private DoublePendulum[] doublePendulums;
+    private MultiplePendulum multiplePendulum;
 
-    public Board(int b_WIDTH, int b_HEIGHT) {
+    private ArrayList<Point> trail1 = new ArrayList<>();
+    private int maxPointCount1 = 150;
+    private ArrayList<Point> trail2 = new ArrayList<>();
+    private int maxPointCount2 = 150;
+    private float x_0;
+    private float a_x_0 = 0;
+    private float y_0;
+    private float a_y_0 = 0;
+    private float period = 3;
+    private float amplitude = 60;
+    private float theta = (float) Math.toRadians(100);
+    private long start_time;
+    private long time;
+
+    public Board(int b_WIDTH, int b_HEIGHT) throws Exception {
         B_WIDTH = b_WIDTH;
         B_HEIGHT = b_HEIGHT;
+        x_0 = b_WIDTH / 2;
+        y_0 = b_HEIGHT / 3;
         initBoard();
     }
 
-    private void initBoard() {
+    private void initBoard() throws Exception {
         //addKeyListener(new TAdapter());
         setFocusable(true);
         setBackground(Color.WHITE);
@@ -35,27 +53,41 @@ public class Board extends JPanel implements ActionListener {
 
         //initPendulum();
         //initDoublePendulum();
-        initDoublePendulums();
+        //initDoublePendulums();
+        initMultiplePendulum();
+
+        start_time = System.nanoTime();
 
         timer = new Timer(DELAY, this);
         timer.start();
     }
 
     public void initDoublePendulums() {
+        doublePendulums = new DoublePendulum[doublePendulumAmount];
         for (int i = 0; i < doublePendulumAmount; i++) {
-            doublePendulums[i] = new DoublePendulum((float) Math.toRadians(100), 1.2f, 1f, (float) Math.toRadians(101 + i / 100000000f), 0.8f, 10f, 9.81f);
+            doublePendulums[i] = new DoublePendulum((float) Math.toRadians(80), 1f, 1f, (float) Math.toRadians(101 + i / 100000000f), 1f, 10f, 9.81f);
             doublePendulums[i].initDoublePendulum();
         }
     }
 
     public void initDoublePendulum() {
-        doublePendulum = new DoublePendulum((float) Math.toRadians(60), 1.5f, 1, (float) Math.toRadians(20), 1,1, 9.81f);
+        doublePendulum = new DoublePendulum((float) Math.toRadians(80), 1, 1, (float) Math.toRadians(30), 1,1, 9.81f);
         doublePendulum.initDoublePendulum();
     }
 
     public void initPendulum() {
         pendulum = new Pendulum((float) Math.toRadians(1));
         pendulum.initPendulum();
+    }
+
+    public void initMultiplePendulum() throws Exception {
+        multiplePendulum = new MultiplePendulum(new float[]{(float) Math.toRadians(80), (float) Math.toRadians(30), (float) Math.toRadians(50)}, 9.81f);
+        //multiplePendulum = new MultiplePendulum(3);
+        //multiplePendulum = new MultiplePendulum(new float[]{0.8f, 0.6f, 0.4f, 0.2f}, new float[]{(float) Math.toRadians(89), (float) Math.toRadians(91), (float) Math.toRadians(89), (float) Math.toRadians(91)}, 9.81f);
+        //multiplePendulum = new MultiplePendulum(new float[]{0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f},
+        //      new float[]{0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f},
+        //        new float[]{1f, 1f, 2f, 1f, 2f, 1f, 1f, 1f, 1f, 1f, 1f, 1f}, new float[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},9.81f);
+        multiplePendulum.initMultiplePendulum();
     }
 
     @Override
@@ -93,17 +125,30 @@ public class Board extends JPanel implements ActionListener {
             pendulumFirstEnd[1] += B_HEIGHT / 2;
             g.setColor(Color.red);
             g.drawLine(B_WIDTH / 2, B_HEIGHT / 2, (int) pendulumFirstEnd[0], (int) pendulumFirstEnd[1]);
-            g.fillOval((int) (pendulumFirstEnd[0] - 12), (int) (pendulumFirstEnd[1] - 12), 24, 24);
+            //g.fillOval((int) (pendulumFirstEnd[0] - 12), (int) (pendulumFirstEnd[1] - 12), 24, 24);
             float[] pendulumSecondEnd = doublePendulum.calculateSecondCords();
             pendulumSecondEnd[0] *= m2p;
             pendulumSecondEnd[1] *= m2p;
             pendulumSecondEnd[0] += pendulumFirstEnd[0];
             pendulumSecondEnd[1] += pendulumFirstEnd[1];
             g.drawLine((int) pendulumFirstEnd[0], (int) pendulumFirstEnd[1], (int) pendulumSecondEnd[0], (int) pendulumSecondEnd[1]);
-            g.fillOval((int) (pendulumSecondEnd[0] - 12), (int) (pendulumSecondEnd[1] - 12), 24, 24);
-            g.setColor(Color.BLACK);
-            g.setColor(Color.BLACK);
-            g.fillOval(B_WIDTH / 2 - 5, B_HEIGHT / 2 - 5, 10, 10);
+            trail1.add(new Point((int) pendulumSecondEnd[0], (int) pendulumSecondEnd[1]));
+            if (trail1.size() > maxPointCount1) {
+                trail1.remove(0);
+            }
+            if (trail1.size() > 1) {
+                g.setColor(Color.blue);
+                Point p1;
+                Point p2;
+                for (int i = 0; i < trail1.size() - 1; i++) {
+                    p1 = trail1.get(i);
+                    p2 = trail1.get(i + 1);
+                    g.drawLine(p1.x, p1.y, p2.x, p2.y);
+                }
+            }
+            //g.fillOval((int) (pendulumSecondEnd[0] - 12), (int) (pendulumSecondEnd[1] - 12), 24, 24);
+            //g.setColor(Color.BLACK);
+            //g.fillOval(B_WIDTH / 2 - 5, B_HEIGHT / 2 - 5, 10, 10);
         }
 
         if (doublePendulums != null) {
@@ -112,15 +157,37 @@ public class Board extends JPanel implements ActionListener {
                 pendulumFirstEnd[0] *= m2p;
                 pendulumFirstEnd[1] *= m2p;
                 pendulumFirstEnd[0] += B_WIDTH / 2;
-                pendulumFirstEnd[1] += B_HEIGHT / 4;
+                pendulumFirstEnd[1] += B_HEIGHT / 3;
                 g.setColor(new Color(150, 150, 255, 4));
-                g.drawLine(B_WIDTH / 2, B_HEIGHT / 4, (int) pendulumFirstEnd[0], (int) pendulumFirstEnd[1]);
+                g.drawLine(B_WIDTH / 2, B_HEIGHT / 3, (int) pendulumFirstEnd[0], (int) pendulumFirstEnd[1]);
                 float[] pendulumSecondEnd = doublePendulums[i].calculateSecondCords();
                 pendulumSecondEnd[0] *= m2p;
                 pendulumSecondEnd[1] *= m2p;
                 pendulumSecondEnd[0] += pendulumFirstEnd[0];
                 pendulumSecondEnd[1] += pendulumFirstEnd[1];
                 g.drawLine((int) pendulumFirstEnd[0], (int) pendulumFirstEnd[1], (int) pendulumSecondEnd[0], (int) pendulumSecondEnd[1]);
+            }
+        }
+
+        if (multiplePendulum != null) {
+            Point[] points = multiplePendulum.getPoints((int) x_0, (int) y_0, m2p);
+            g.setColor(Color.WHITE);
+            for (int i = 1; i < points.length; i++) {
+                g.drawLine(points[i - 1].x, points[i - 1].y, points[i].x, points[i].y);
+            }
+            trail2.add(points[points.length - 1]);
+            if (trail2.size() > maxPointCount2) {
+                trail2.remove(0);
+            }
+            if (trail2.size() > 1) {
+                g.setColor(Color.blue);
+                Point p1;
+                Point p2;
+                for (int i = 0; i < trail2.size() - 1; i++) {
+                    p1 = trail2.get(i);
+                    p2 = trail2.get(i + 1);
+                    g.drawLine(p1.x, p1.y, p2.x, p2.y);
+                }
             }
         }
     }
@@ -168,7 +235,20 @@ public class Board extends JPanel implements ActionListener {
             updateDoublePendulums();
         }
 
+        if (multiplePendulum != null) {
+            updateMultiplePendulum();
+        }
+
+        //updateR0();
+
         repaint();
+    }
+
+    private void updateR0() {
+        x_0 = B_WIDTH / 2 + (float) (Math.sin((System.nanoTime() - start_time) * 2 * Math.PI / 1000000000f / period) * amplitude * Math.sin(theta));
+        y_0 = B_HEIGHT / 3 + (float) (Math.sin((System.nanoTime() - start_time) * 2 * Math.PI / 1000000000f / period) * amplitude * Math.cos(theta));
+        a_x_0 = (float) (-Math.sin((System.nanoTime() - start_time) * 2 * Math.PI / 1000000000f / period) * amplitude * Math.sin(theta) * 4 * Math.PI * Math.PI / period / period);
+        a_x_0 = (float) (-Math.sin((System.nanoTime() - start_time) * 2 * Math.PI / 1000000000f / period) * amplitude * Math.cos(theta) * 4 * Math.PI * Math.PI / period / period);
     }
 
     private void updatePendulum() {
@@ -183,7 +263,12 @@ public class Board extends JPanel implements ActionListener {
         for (int i = 0; i < doublePendulumAmount; i++) {
             doublePendulums[i].update();
         }
-     }
+    }
+
+    private void updateMultiplePendulum() {
+        multiplePendulum.update(a_x_0, a_y_0);
+    }
+
     /*
     private class TAdapter extends KeyAdapter {
 

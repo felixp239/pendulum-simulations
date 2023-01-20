@@ -8,11 +8,11 @@ public class Main extends JFrame {
     private final static int HEIGHT = 800;
 
 
-    public Main() {
+    public Main() throws Exception {
         initUI();
     }
 
-    private void initUI() {
+    private void initUI() throws Exception {
         add(new Board(WIDTH, HEIGHT));
 
         setSize(WIDTH, HEIGHT);
@@ -23,11 +23,17 @@ public class Main extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
         EventQueue.invokeLater(() -> {
-            Main ex = new Main();
+            Main ex = null;
+            try {
+                ex = new Main();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             ex.setVisible(true);
         });
+
     }
 }

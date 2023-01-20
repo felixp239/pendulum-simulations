@@ -32,7 +32,7 @@ public class DoublePendulum {
     }
 
     public void initDoublePendulum() {
-        prev_time = System.nanoTime() / 1000;
+        prev_time = System.nanoTime();
     }
 
     public float[] calculateFirstCords() {
@@ -44,10 +44,11 @@ public class DoublePendulum {
     }
 
     public void update() {
-        time = System.nanoTime() / 1000;
-        float delta = (time - prev_time) / 1000000f;
+        time = System.nanoTime();
+        float delta = (time - prev_time) / 1000000000f;
+        //float delta = 0.01f;
 
-        parameters = calculateDeltas(parameters, delta);
+        parameters = calculateParameters(parameters, delta);
 
         prev_time = time;
     }
@@ -91,7 +92,7 @@ public class DoublePendulum {
         derivatives[3] = calculateBeta2(values);
     }
 
-    private float[] calculateDeltas(float[] x_n, float delta) { //x_n - theta1, theta2, omega1, omega2
+    private float[] calculateParameters(float[] x_n, float delta) { //x_n - theta1, theta2, omega1, omega2
         float[] a_n = new float[4];
         float[] b_n = new float[4];
         float[] c_n = new float[4];

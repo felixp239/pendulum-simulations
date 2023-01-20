@@ -36,7 +36,7 @@ public class Pendulum {
     }
 
     public void initPendulum() {
-        prev_time = System.nanoTime() / 1000;
+        prev_time = System.nanoTime();
         period_time_1 = prev_time;
     }
 
@@ -45,15 +45,15 @@ public class Pendulum {
     }
 
     public void update() {
-        time = System.nanoTime() / 1000;
-        theta += omega * (time - prev_time) / 2000000;
+        time = System.nanoTime();
+        theta += omega * (time - prev_time) / 2000000000f;
         omega_prev = omega;
-        omega -= (g * Math.sin(theta) / length + k * omega / mass)  * (time - prev_time) / 1000000;
+        omega -= (g * Math.sin(theta) / length + k * omega / mass)  * (time - prev_time) / 1000000000f;
         if (omega_prev * omega <= 0) {
             System.out.println(time - period_time_1);
             period_time_1 = time;
         }
-        theta += omega * (time - prev_time) / 2000000;
+        theta += omega * (time - prev_time) / 2000000000f;
         prev_time = time;
     }
 }
