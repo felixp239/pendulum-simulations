@@ -51,7 +51,8 @@ public class MultiplePendulum {
         this(new float[n], 9.81f);
         for (int i = 0, k = 1; i < n; i++, k *= 2) {
             length[i] = (float) (1f / Math.sqrt(k));
-            parameters[0][i] = (float) Math.toRadians(90 - i * 10);
+            mass[i] = length[i];
+            parameters[0][i] = (float) Math.toRadians(90 - i * 20);
         }
     }
 
@@ -67,7 +68,6 @@ public class MultiplePendulum {
         this.a_x = a_x;
         this.a_y = a_y;
         parameters = calculateParameters(parameters, delta);
-
         prev_time = time;
     }
 
@@ -90,7 +90,13 @@ public class MultiplePendulum {
             }
         }
 
-        return getValues(x_n, resultDerivative, delta);
+        float[][] result = getValues(x_n, resultDerivative, delta);
+
+        if (Float.isNaN(result[0][0])) {
+            System.out.println(result[0][0]);
+        }
+
+        return result;
     }
 
     private void getDerivatives(float[][] derivatives, float[][] values) {
@@ -121,19 +127,10 @@ public class MultiplePendulum {
             }
         }
         for (int k = 0; k < n - 1; k++) {
-            if (equations[k + 1][k] > equations[k][k]) {
-                float[] temp = equations[k];
-                equations[k] = equations[k + 1];
-                equations[k + 1] = temp;
-                float t = answers[k];
-                answers[k] = answers[k + 1];
-                answers[k + 1] = t;
-            }
-
             for (int i = k + 1; i < n; i++) {
                 float factor = equations[i][k] / equations[k][k];
                 answers[i] -= answers[k] * factor;
-                for (int j = k; j < n; j++) {
+                for (int j = 0; j < n; j++) {
                     equations[i][j] -= equations[k][j] * factor;
                 }
             }
